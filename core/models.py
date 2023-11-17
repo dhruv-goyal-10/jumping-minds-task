@@ -70,6 +70,14 @@ class ElevatorRequest(models.Model):
         ("processing", "Processing"),
     )
 
+    elevator_system = models.ForeignKey(
+        ElevatorSystem,
+        related_name="elevator_requests",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
     elevator = models.ForeignKey(
         Elevator,
         related_name="elevator_requests",
