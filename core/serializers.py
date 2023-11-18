@@ -6,6 +6,7 @@ from core.utils import ElevatorService
 class ElevatorSystemSerializer(serializers.ModelSerializer):
     number_of_elevators = serializers.IntegerField(required=True, write_only=True)
 
+    # Serializer for Elevator System
     class Meta:
         model = ElevatorSystem
         fields = "__all__"
@@ -33,6 +34,11 @@ class ElevatorSystemSerializer(serializers.ModelSerializer):
 
 
 class ElevatorSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for Elevator
+    """
+
     elevator_system = ElevatorSystemSerializer(read_only=True)
     moving_direction = serializers.SerializerMethodField()
 
@@ -40,6 +46,7 @@ class ElevatorSerializer(serializers.ModelSerializer):
         model = Elevator
         fields = "__all__"
 
+    # Get the moving direction of the elevator
     def get_moving_direction(self, obj):
         if obj.destination_floor is not None:
             return "up" if obj.destination_floor > obj.current_floor else "down"
@@ -49,19 +56,30 @@ class ElevatorSerializer(serializers.ModelSerializer):
         status = validated_data.get("status", None)
         if status == "maintenance":
             instance.destination_floor = None
+
+        # Updating the status of request served by maintenance elevator to queued
         ElevatorRequest.objects.filter(elevator=instance).update(status="queued")
         return super().update(instance, validated_data)
 
 
 class ElevatorRequestSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for Elevator Request
+    """
+
     class Meta:
         model = ElevatorRequest
         fields = "__all__"
+
+        # User should not be able to update status, hence read_only
+        # Elevator System is required and cannot be null
         extra_kwargs = {
             "status": {"read_only": True},
             "elevator_system": {"required": True, "allow_null": False},
         }
 
+    # Validate the from_floor and to_floor
     def validate(self, data):
         data.pop("elevator", None)
         super().validate(data)
@@ -80,6 +98,8 @@ class ElevatorRequestSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         elevator_request = ElevatorRequest.objects.create(**validated_data)
+
+        # Servicing the elevator request
         ElevatorService.service_elevator_request(elevator_request)
         return elevator_request
 

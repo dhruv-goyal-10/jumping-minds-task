@@ -3,6 +3,10 @@ import json
 
 
 class CustomResponseRenderer(renderers.JSONRenderer):
+    """
+    Custom Response Renderer for API
+    """
+
     charset = "utf-8"
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
