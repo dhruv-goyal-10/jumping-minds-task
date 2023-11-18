@@ -7,7 +7,13 @@ class ElevatorSystemAdmin(admin.ModelAdmin):
 
 
 class ElevatorAdmin(admin.ModelAdmin):
-    list_display = ("status", "current_floor", "destination_floor", "status")
+    list_display = (
+        "elevator_system",
+        "status",
+        "current_floor",
+        "destination_floor",
+        "status",
+    )
 
 
 class ElevatorRequestAdmin(admin.ModelAdmin):

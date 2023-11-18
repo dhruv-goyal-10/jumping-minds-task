@@ -45,12 +45,12 @@ class ElevatorRequestSerializer(serializers.ModelSerializer):
         model = ElevatorRequest
         fields = "__all__"
         extra_kwargs = {
-            "elevator": {"read_only": True},
             "status": {"read_only": True},
             "elevator_system": {"required": True, "allow_null": False},
         }
 
     def validate(self, data):
+        data.pop("elevator", None)
         super().validate(data)
         elevator_system = data.get("elevator_system")
         from_floor = data.get("from_floor")
@@ -71,6 +71,7 @@ class ElevatorRequestSerializer(serializers.ModelSerializer):
         return elevator_request
 
     def to_representation(self, instance):
+        instance = ElevatorRequest.objects.get(pk=instance.pk)
         repr = super().to_representation(instance)
         repr["elevator_system"] = ElevatorSystemSerializer(
             instance.elevator_system

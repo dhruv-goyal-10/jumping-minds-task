@@ -1,4 +1,4 @@
-from core.models import ElevatorSystem, Elevator, ElevatorRequest
+from core.models import Elevator, ElevatorRequest
 from django.db.models import F, Min, Func
 
 
@@ -6,6 +6,43 @@ class ElevatorService:
     """
     Service class for elevators.
     """
+
+    @staticmethod
+    def service_elevator_system(elevator_system):
+        currently_processing_elevator_requests = ElevatorRequest.objects.filter(
+            status="processing", elevator_system=elevator_system
+        ).select_related("elevator")
+
+        updated_elevators = list()
+        updated_elevator_requests = list()
+        for elevator_request in currently_processing_elevator_requests:
+            elevator = elevator_request.elevator
+            print(
+                elevator.pk,
+                elevator.current_floor,
+                elevator.destination_floor,
+                elevator.status,
+            )
+            elevator.current_floor = elevator.destination_floor
+            elevator.destination_floor = None
+            elevator.status = "available"
+            updated_elevators.append(elevator)
+
+            current_elevator_request = elevator_request
+            current_elevator_request.status = "finished"
+            updated_elevator_requests.append(current_elevator_request)
+
+        Elevator.objects.bulk_update(
+            updated_elevators, ["current_floor", "destination_floor", "status"]
+        )
+        ElevatorRequest.objects.bulk_update(updated_elevator_requests, ["status"])
+
+        queued_elevator_requests_in_elevator_system = ElevatorRequest.objects.filter(
+            status="queued", elevator_system=elevator_system
+        ).order_by("id")
+
+        for queued_elevator_request in queued_elevator_requests_in_elevator_system:
+            ElevatorService.service_elevator_request(queued_elevator_request)
 
     @staticmethod
     def service_elevator_request(new_elevator_request):
