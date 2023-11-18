@@ -34,10 +34,23 @@ class ElevatorSystemSerializer(serializers.ModelSerializer):
 
 class ElevatorSerializer(serializers.ModelSerializer):
     elevator_system = ElevatorSystemSerializer(read_only=True)
+    moving_direction = serializers.SerializerMethodField()
 
     class Meta:
         model = Elevator
         fields = "__all__"
+
+    def get_moving_direction(self, obj):
+        if obj.destination_floor is not None:
+            return "up" if obj.destination_floor > obj.current_floor else "down"
+        return "Not Moving"
+
+    def update(self, instance, validated_data):
+        status = validated_data.get("status", None)
+        if status == "maintenance":
+            instance.destination_floor = None
+        ElevatorRequest.objects.filter(elevator=instance).update(status="queued")
+        return super().update(instance, validated_data)
 
 
 class ElevatorRequestSerializer(serializers.ModelSerializer):

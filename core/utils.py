@@ -17,12 +17,6 @@ class ElevatorService:
         updated_elevator_requests = list()
         for elevator_request in currently_processing_elevator_requests:
             elevator = elevator_request.elevator
-            print(
-                elevator.pk,
-                elevator.current_floor,
-                elevator.destination_floor,
-                elevator.status,
-            )
             elevator.current_floor = elevator.destination_floor
             elevator.destination_floor = None
             elevator.status = "available"
